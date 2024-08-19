@@ -100,8 +100,7 @@ namespace AWSSDK_DotNet.IntegrationTests.Utils
                 offset = General.IncorrectPositiveClockSkewOffset;
             else
                 offset = General.IncorrectNegativeClockSkewOffset;
-            ReflectionHelpers.Invoke(typeof(CorrectClockSkew), "SetClockCorrectionForEndpoint",
-new object[] {AWSConfigs.RegionEndpoint.ToString(), offset });
+            General.SetClockSkewCorrection(offset);
         }
 
         #endregion

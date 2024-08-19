@@ -928,6 +928,17 @@ namespace Amazon.Runtime
 #endif
         }
 
+        /// <summary>
+        /// Wrapper around <seealso cref="AWSConfigs.ManualClockCorrection"/>
+        /// </summary>
+        [Obsolete("Please use CorrectClockSkew.GetClockCorrectionForEndpoint(string endpoint) instead.", false)]
+        public TimeSpan ClockOffset
+        {
+            get
+            {
+                return AWSConfigs.ManualClockCorrection.GetValueOrDefault();
+            }
+        }
 
 
 

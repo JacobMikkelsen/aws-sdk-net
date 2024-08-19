@@ -44,6 +44,7 @@ namespace UnitTests
             "MaxConnectionsPerServer",
             "HttpClientCacheSize",
             "ReadWriteTimeout",
+            "ClockOffset",
             "HttpClientFactory",
             "DisableHostPrefixInjection",
             "EndpointDiscoveryEnabled",

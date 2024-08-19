@@ -127,6 +127,23 @@ namespace Amazon
             get { return _rootConfig.CorrectForClockSkew; }
             set { _rootConfig.CorrectForClockSkew = value; }
         }
+
+        /// <summary>
+        /// The calculated clock skew correction, if there is one.
+        /// This field will be set if a service call resulted in an exception
+        /// and the SDK has determined that there is a difference between local
+        /// and server times.
+        /// 
+        /// If <seealso cref="CorrectForClockSkew"/> is set to true, this
+        /// value will be set to the correction, but it will not be used by the
+        /// SDK and clock skew errors will not be retried.
+        /// </summary>
+        [Obsolete("This value is deprecated in favor of IClientConfig.ClockOffset, use CorrectClockSkew.GetClockCorrectionForEndpoint(string endpoint) instead.")]
+        public static TimeSpan ClockOffset
+        {
+            get;
+            internal set;
+        }
         #endregion
 
         #region Region
