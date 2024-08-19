@@ -197,16 +197,6 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
                 var aace = new AdfsAuthenticationControllerException("Message");
                 TestException(aace);
 
-#pragma warning disable 618
-
-                var ccre = new CredentialCallbackRequiredException("Message");
-                TestException(ccre);
-
-                var afe = new AuthenticationFailedException("Message");
-                TestException(afe);
-
-#pragma warning restore 618
-
             }
         }
 
@@ -566,36 +556,6 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
 
         [TestMethod]
         [TestCategory("General")]
-        public void TestBidiCharsInUri()
-        {
-            var bidiChar = '\u200E';
-            using(var client = TestBase<AmazonS3Client>.CreateClient())
-            {
-                var part1 = "test";
-                var part2 = "key";
-                var bidiKey = part1 + bidiChar + part2;
-                
-                // verify character is in the string
-                Assert.IsTrue(bidiKey.IndexOf(bidiChar) > 0);
-                Assert.IsTrue(AWSSDKUtils.HasBidiControlCharacters(bidiKey));
-
-                // verify character is dropped by the Uri class
-                Uri uri = new Uri(new Uri("http://www.amazon.com/"), bidiKey);
-                Assert.IsTrue(uri.AbsoluteUri.IndexOf(bidiChar) < 0);
-                Assert.IsFalse(AWSSDKUtils.HasBidiControlCharacters(uri.AbsoluteUri));
-                Assert.IsTrue(uri.AbsoluteUri.IndexOf(part1 + part2) > 0);
-
-                // verify that trying to use key throws the appropriate exception
-                var e = AssertExtensions.ExpectException<AmazonClientException>(() => client.GetObject("fake-bucket", bidiKey));
-                Assert.IsNotNull(e);
-                Assert.IsTrue(e.Message.Contains("[" + bidiKey + "]"));
-                Assert.IsTrue(e.Message.Contains("cannot be handled by the .NET SDK"));
-                Assert.IsTrue(AWSSDKUtils.HasBidiControlCharacters(e.Message));
-            }
-        }
-
-        [TestMethod]
-        [TestCategory("General")]
         public void TestClientDispose()
         {
             IAmazonS3 client;
@@ -770,7 +730,6 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
         {
             var oldManualClockCorrection = AWSConfigs.ManualClockCorrection;
             var oldCorrectClockSkew = AWSConfigs.CorrectForClockSkew;
-            var oldClockSkewCorrection = context.Config.ClockOffset;
             var oldUtcNowSource = GetUtcNowSource();
 
             try
@@ -798,7 +757,6 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
             {
                 AWSConfigs.ManualClockCorrection = oldManualClockCorrection;
                 AWSConfigs.CorrectForClockSkew = oldCorrectClockSkew;
-                SetClockSkewCorrection(context.Config, oldClockSkewCorrection);
                 SetUtcNowSource(oldUtcNowSource);
             }
         }
@@ -806,33 +764,26 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
         private static void TestServiceCallForClockSkew(ClockSkewTestContext context)
         {
             var oldCorrectClockSkew = AWSConfigs.CorrectForClockSkew;
-            var oldClockSkewCorrection = context.Config.ClockOffset;
             var oldUtcNowSource = GetUtcNowSource();
 
             try
             {
                 AWSConfigs.CorrectForClockSkew = true;
-                SetClockSkewCorrection(context.Config, TimeSpan.Zero);
+                SetClockSkewCorrection(TimeSpan.Zero);
                 context.TestAction();
 
 #pragma warning disable CS0618 // Type or member is obsolete
                 Assert.IsTrue(AWSConfigs.ClockOffset == TimeSpan.Zero);
-#pragma warning restore CS0618 // Type or member is obsolete
-                Assert.IsTrue(context.Config.ClockOffset == TimeSpan.Zero);                
 
-                SetClockSkewCorrection(context.Config, IncorrectPositiveClockSkewOffset);
+                SetClockSkewCorrection(IncorrectPositiveClockSkewOffset);
                 context.TestAction();
 #pragma warning disable CS0618 // Type or member is obsolete
-                Assert.AreNotEqual(IncorrectPositiveClockSkewOffset, AWSConfigs.ClockOffset);
-#pragma warning restore CS0618 // Type or member is obsolete
-                Assert.AreNotEqual(IncorrectPositiveClockSkewOffset, context.Config.ClockOffset);
+                Assert.AreEqual(IncorrectPositiveClockSkewOffset, AWSConfigs.ClockOffset);
 
-                SetClockSkewCorrection(context.Config, IncorrectNegativeClockSkewOffset);
+                SetClockSkewCorrection(IncorrectNegativeClockSkewOffset);
                 context.TestAction();
 #pragma warning disable CS0618 // Type or member is obsolete
-                Assert.AreNotEqual(IncorrectPositiveClockSkewOffset, AWSConfigs.ClockOffset);
-#pragma warning restore CS0618 // Type or member is obsolete
-                Assert.AreNotEqual(IncorrectNegativeClockSkewOffset, context.Config.ClockOffset);
+                Assert.AreEqual(IncorrectNegativeClockSkewOffset, AWSConfigs.ClockOffset);
 
                 Console.WriteLine("Simulating positive clock skew");
                 SetUtcNowSource(() => DateTime.UtcNow + IncorrectPositiveClockSkewOffset);
@@ -840,13 +791,13 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
                 AssertExtensions.ExpectException(context.TestAction);
                     
                 AWSConfigs.CorrectForClockSkew = true;
-                SetClockSkewCorrection(context.Config, TimeSpan.Zero);
+                SetClockSkewCorrection(TimeSpan.Zero);
                 context.TestAction();
 
                 Console.WriteLine("Simulating negative clock skew");
                 SetUtcNowSource(() => DateTime.UtcNow + IncorrectNegativeClockSkewOffset);
                 AWSConfigs.CorrectForClockSkew = true;
-                SetClockSkewCorrection(context.Config, TimeSpan.Zero);
+                SetClockSkewCorrection(TimeSpan.Zero);
                 context.TestAction();
 
                 AWSConfigs.CorrectForClockSkew = false;
@@ -855,7 +806,6 @@ namespace AWSSDK_DotNet.IntegrationTests.Tests
             finally
             {
                 AWSConfigs.CorrectForClockSkew = oldCorrectClockSkew;
-                SetClockSkewCorrection(context.Config, oldClockSkewCorrection);
                 SetUtcNowSource(oldUtcNowSource);
             }
         }
