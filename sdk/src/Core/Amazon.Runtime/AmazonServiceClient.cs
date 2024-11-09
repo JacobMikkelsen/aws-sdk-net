@@ -187,6 +187,11 @@ namespace Amazon.Runtime
         {
         }
 
+        protected AmazonServiceClient(ClientConfig config)
+            : this(null, config)
+        {
+        }
+
         protected virtual void Initialize()
         {
         }
@@ -302,7 +307,7 @@ namespace Amazon.Runtime
             mExceptionEvent(this, args);
         }
 
-#endregion
+        #endregion
 
         #region Dispose methods
 
@@ -335,7 +340,7 @@ namespace Amazon.Runtime
                 throw new ObjectDisposedException(GetType().FullName);
         }
 
-#endregion
+        #endregion
 
         protected abstract AbstractAWSSigner CreateSigner();
         protected virtual void CustomizeRuntimePipeline(RuntimePipeline pipeline) { }
@@ -469,7 +474,7 @@ namespace Amazon.Runtime
         /// <param name="skipEncodingValidPathChars">If true the accepted path characters {/+:} are not encoded.</param>
         /// <returns>Uri for the given SDK request</returns>
         public static Uri ComposeUrl(IRequest internalRequest, bool skipEncodingValidPathChars)
-        { 
+        {
             Uri url = internalRequest.Endpoint;
             var resourcePath = internalRequest.ResourcePath;
             if (resourcePath == null)
@@ -532,7 +537,7 @@ namespace Amazon.Runtime
             DontUnescapePathDotsAndSlashes(uri);
             return uri;
         }
- 
+
 
         /// <summary>
         /// Patches the in-flight uri to stop it unescaping the path etc (what Uri did before
@@ -625,6 +630,6 @@ namespace Amazon.Runtime
             {
                 requestContext.CSMCallEvent = new MonitoringAPICallEvent(requestContext);
             }
-        }        
+        }
     }
 }
